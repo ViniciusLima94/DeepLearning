@@ -23,6 +23,7 @@ class ANN:
 		self.y      = y                        # Output values (labels)
 		self.n_layers    = len(self.layers)        # Number of hidden layers
 		self.n_input_layers   = self.X.shape[1]    # Number of neurons in the input layer
+		self.m                = float(self.X.shape[0]) # Number of training sets
 		self.a                = {}                 # Dictionary to store neurons activation in each layer
 		for i in range(self.n_layers+1):           # Initializing one entrie for each hidden layer
 			if i == 0:
@@ -31,12 +32,16 @@ class ANN:
 				self.a[i] = []
 		# Creating random weights
 		self.weights = {}                          # Weights dictionary
-		# Initializing for the input layer
+		self.bias    = {}                          # Bias dictionary
+		# Initializing weights for the input layer
 		self.weights[0] = np.random.normal( 0, 1, size=(self.n_input_layers, self.layers[0]) )
+		# Initializing weights for the first hidden layer
+		self.bias[0] = np.random.normal( 0, 1, size=(self.layers[0], 1) )
 		# If there is more then one hidden layer, initialize the weights between then
 		if self.n_layers > 1:
 			for i in range(self.n_layers - 1):
 				self.weights[i+1] = np.random.normal( 0, 1, size=(self.layers[i], self.layers[i+1]) )
+				self.bias[i+1]    = np.random.normal( 0, 1, size=(self.layers[i+1], 1) )
 
 	def fit(self,):
 		'''	
@@ -44,13 +49,15 @@ class ANN:
 		'''
 		for i in range(self.epochs):
 			for j in range(self.n_layers):
-				self.a[j+1] = self.sigmoid( np.dot( self.a[j], self.weights[j] ) )  # Compute input in the jth in the hidden layer
+				self.a[j+1] = self.sigmoid( np.dot( self.a[j], self.weights[j] ) + self.bias[j].T )  # Compute input in the jth in the hidden layer
 			# Backpropagation algorithm
 			self.delta = self.cost_function_prime(self.y, self.a[self.n_layers]) * self.sigmoid_prime(self.a[self.n_layers])            # Compute error [delta = dC/da]
-			self.weights[self.n_layers-1] -= self.alpha * np.dot(self.a[self.n_layers-1].T, self.delta)  # Update weights
+			self.weights[self.n_layers-1] -= (self.alpha/self.m) * np.dot(self.a[self.n_layers-1].T, self.delta)  # Update weights
+			self.bias[self.n_layers-1] -= self.alpha * self.delta.mean()
 			for L in range(2, self.n_layers+1):
 				self.delta = np.dot( self.delta, self.weights[self.n_layers-(L-1)].T ) *  self.sigmoid_prime(self.a[self.n_layers-(L-1)])
-				self.weights[self.n_layers-L] -= self.alpha * np.dot(self.a[self.n_layers-L].T, self.delta)  # Update weights
+				self.weights[self.n_layers-L] -= (self.alpha/self.m) * np.dot(self.a[self.n_layers-L].T, self.delta)  # Update weights
+				self.bias[self.n_layers-L] -= self.alpha * self.delta.mean()
 
 	def sigmoid(self, x):
 		'''
