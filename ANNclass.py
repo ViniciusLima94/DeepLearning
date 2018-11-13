@@ -48,16 +48,9 @@ class ANN:
 			# Backpropagation algorithm
 			self.delta = self.cost_function_prime(self.y, self.a[self.n_layers]) * self.sigmoid_prime(self.a[self.n_layers])            # Compute error [delta = dC/da]
 			self.weights[self.n_layers-1] -= self.alpha * np.dot(self.a[self.n_layers-1].T, self.delta)  # Update weights
-			#self.delta = np.dot( self.delta, self.weights[self.n_layers-1].T ) *  self.sigmoid_prime(self.a[self.n_layers-1])
-			#self.weights[self.n_layers-2] -= self.alpha * np.dot(self.a[self.n_layers-2].T, self.delta)  # Update weights
-			#self.delta = np.dot( self.delta, self.weights[self.n_layers-2].T ) *  self.sigmoid_prime(self.a[self.n_layers-2])
-			#self.weights[self.n_layers-3] -= self.alpha * np.dot(self.a[self.n_layers-3].T, self.delta)  # Update weights
 			for L in range(2, self.n_layers+1):
 				self.delta = np.dot( self.delta, self.weights[self.n_layers-(L-1)].T ) *  self.sigmoid_prime(self.a[self.n_layers-(L-1)])
 				self.weights[self.n_layers-L] -= self.alpha * np.dot(self.a[self.n_layers-L].T, self.delta)  # Update weights
-			#for L in range(self.n_layers-1, 1, -1):
-			#	self.delta = self.delta.dot(self.weights[L+1].T) * self.sigmoid_prime(self.a[L]) 
-			#	self.weights[L-1] -=  self.alpha * self.delta.T.dot(self.a[L-1])
 
 	def sigmoid(self, x):
 		'''
