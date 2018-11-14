@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 class ANN:
 
-	def __init__(self, layers, X, y, epochs=10000, alpha=1, seed=1):
+	def __init__(self, layers = (1,), X=None, y=None, epochs=10000, alpha=1, seed=1, verbose=True):
 		'''
 			Constructor method. Build the ANN
 			Inputs:
@@ -16,6 +16,7 @@ class ANN:
 		'''
 		# Set seed
 		np.random.seed(seed)
+		self.verbose = verbose
 		self.layers = layers                   # How many neurons in each hidden layer, the last one is the output layer (tuple)
 		self.epochs = epochs                   # Number of epochs (iteractions)
 		self.alpha  = alpha                    # Learning rate
@@ -48,9 +49,13 @@ class ANN:
 			Fit the weights in the neural net.
 		'''
 		for i in range(self.epochs):
+			if self.verbose == True:
+				print 'epoch = ' + str(i) + '...'
 			for j in range(self.n_layers):
 				self.a[j+1] = self.sigmoid( np.dot( self.a[j], self.weights[j] ) + self.bias[j].T )  # Compute input in the jth in the hidden layer
 			# Backpropagation algorithm
+			# For mathematical details see:
+			# http://neuralnetworksanddeeplearning.com/chap2.html
 			self.delta = self.cost_function_prime(self.y, self.a[self.n_layers]) * self.sigmoid_prime(self.a[self.n_layers])            # Compute error [delta = dC/da]
 			self.weights[self.n_layers-1] -= (self.alpha/self.m) * np.dot(self.a[self.n_layers-1].T, self.delta)  # Update weights
 			self.bias[self.n_layers-1] -= self.alpha * self.delta.mean()
@@ -58,6 +63,27 @@ class ANN:
 				self.delta = np.dot( self.delta, self.weights[self.n_layers-(L-1)].T ) *  self.sigmoid_prime(self.a[self.n_layers-(L-1)])
 				self.weights[self.n_layers-L] -= (self.alpha/self.m) * np.dot(self.a[self.n_layers-L].T, self.delta)  # Update weights
 				self.bias[self.n_layers-L] -= self.alpha * self.delta.mean()
+
+
+	def predict(self, Xpred):
+		'''
+			Predict the output of a given set Xpred. Must be called after network fitting.
+			Inputs:
+			Xpred: Data set which will be used to predict an output.
+			Outputs:
+			ypred: ANN predction output 
+		'''
+		self.X = Xpred                      # Predict values
+		for i in range(self.n_layers+1):    # Re-initializing activation vector for each hidden layer
+			if i == 0:
+				self.a[i] = self.X
+			else:
+				self.a[i] = []
+		# Forward pass Xpred. Since we've already fitted the weights we don't need the backpropagation
+		# for weight corretion, we just forward pass once.
+		for j in range(self.n_layers):
+				self.a[j+1] = self.sigmoid( np.dot( self.a[j], self.weights[j] ) + self.bias[j].T )
+		return self.a[self.n_layers]
 
 	def sigmoid(self, x):
 		'''
