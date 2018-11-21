@@ -66,6 +66,7 @@ class RBM:
 				self.a += delta_a
 				self.b += delta_b
 			print 'epoch: ' + str(epoch+1) + ', loss: ' + str(loss/n)
+
 	def inference(self, X_infer):
 		v0      = X_infer
 		p_h0_v0 = self.sample_h(v0)   
@@ -73,7 +74,8 @@ class RBM:
 		h_k     = h0[:]
 		p_v_h = self.sample_v(h_k)
 		self.v_k   = self.bernoulli_sampling(p_v_h)
-
+		test_loss  = np.mean( np.abs( self.v_k[v0>=0]-v0[v0>=0] ) )
+		print 'test loss: ' + str(test_loss)
 
 	def contrastive_divergence(self, v0, v_k, p_h0_v0, p_h_v):
 		delta_W = np.zeros([self.W.shape[0], self.W.shape[1]])
