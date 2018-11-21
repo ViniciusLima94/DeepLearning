@@ -54,8 +54,8 @@ class ANN:
 			if self.verbose == True:
 				print 'epoch = ' + str(i) + '...'
 			for k in range(0, int(self.m), self.batch_size):
-				self.a[0]  = self.X[k:k+10, :].copy()
-				self.yexpc = self.y[k:k+10, :].copy()
+				self.a[0]  = self.X[k:k+self.batch_size, :].copy()
+				self.yexpc = self.y[k:k+self.batch_size, :].copy()
 				for j in range(self.n_layers):
 					self.a[j+1] = self.sigmoid( np.dot( self.a[j], self.weights[j] ) + self.bias[j].T )  # Compute input in the jth in the hidden layer
 				# Backpropagation algorithm
