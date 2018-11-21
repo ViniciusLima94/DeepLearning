@@ -8,14 +8,15 @@ import numpy as np
 
 class RBM:
 
-	def __init__(self, X = None, n_hidden = None, mini_batch = None, k = None):
+	def __init__(self, X = None, n_hidden = None, epochs = 10, mini_batch = None, k = None):
 		'''
 			Constructor method.
 			Inputs:
 			Outputs:
 		'''
 		self.k         = k           # Number of Gibbs samplings.
-		self.X          = X
+		self.X         = X           # Data.
+		self.epochs    = epochs      # Number of epochs.
 		self.n_samples  = X.shape[0] # Number of data samples.
 		self.n_visible = X.shape[1]  # Number of visible nodes (= number of features).          
 		# Number of hidden nodes.
@@ -35,29 +36,36 @@ class RBM:
 		self.b = np.zeros(self.n_hidden)
 
 	def fit(self, ):
-		count = 0
-		v0      = self.X               # Setting visible layer
-		n1, n2  = np.where(v0==-1)     # Index of visible units with value -1
-		p_h0_v0 = self.sample_h(v0)    # Sampling hidden layer
-		h0      = self.bernoulli_sampling(p_h0_v0) # Bernoulli sampling hidden layer
-		count = count + 1
-		# Iteration for the rest of Gibbis sampling
-		h_k     = h0[:]
-		while count <= self.k:
-			p_v_h = self.sample_v(h_k)
-			v_k   = self.bernoulli_sampling(p_v_h)
-			# Setting v_k where v0 was -1 to -1
-			v_k[n1, n2] = -1
-			p_h_v =  self.sample_h(v_k) 
-			h_k   = self.bernoulli_sampling(p_h_v)
-			count += 1
-		# Contrastive divergence
-		delta_W, delta_a, delta_b = self.contrastive_divergence(v0, v_k, p_h0_v0, p_h_v)
-		# Updating weights and biases.
-		self.W += delta_W
-		self.a += delta_a
-		self.b += delta_b
-
+		for epoch in range(self.epochs):
+			loss = 0
+			n    = 0
+			for mb in range(0, int(self.n_samples), self.mini_batch):
+				count = 0
+				v0      = self.X[mb:mb+self.mini_batch]               # Setting visible layer
+				n1, n2  = np.where(v0<0)                              # Index of visible units with value -1
+				p_h0_v0 = self.sample_h(v0)                           # Sampling hidden layer
+				h0      = self.bernoulli_sampling(p_h0_v0) # Bernoulli sampling hidden layer
+				count = count + 1
+				# Iteration for the rest of Gibbis sampling
+				h_k     = h0[:]
+				while count <= self.k:
+					p_v_h = self.sample_v(h_k)
+					v_k   = self.bernoulli_sampling(p_v_h)
+					# Setting v_k where v0 was -1 to -1
+					v_k[n1, n2] = -1
+					p_h_v =  self.sample_h(v_k) 
+					h_k   = self.bernoulli_sampling(p_h_v)
+					count += 1
+				# Computing loss
+				loss += np.mean( np.abs( v_k[v0>=0] - v0[v0>=0] ) )
+				n    += 1.0
+				# Contrastive divergence
+				delta_W, delta_a, delta_b = self.contrastive_divergence(v0, v_k, p_h0_v0, p_h_v)
+				# Updating weights and biases.
+				self.W += delta_W
+				self.a += delta_a
+				self.b += delta_b
+			print 'epoch: ' + str(epoch+1) + ', loss: ' + str(loss/n)
 	def inference(self, X_infer):
 		v0      = X_infer
 		p_h0_v0 = self.sample_h(v0)   
