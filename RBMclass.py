@@ -29,9 +29,12 @@ class RBM:
 		else:
 			self.mini_batch = mini_batch # Size of the mini batch.
 		# Weigth of the connections
-		self.W = np.random.normal(0, 0.02, size=(self.n_visible, self.n_hidden))
+		self.W = np.random.normal(0, 0.01, size=(self.n_visible, self.n_hidden))
 		# Bias of the visible layer
-		self.a = np.zeros(self.n_visible)
+		self.pi = self.X.copy()
+		self.pi[self.pi<0] = 0
+		self.pi = self.pi.mean(axis=0) + 0.0001
+		self.a = np.log( self.pi / (1-self.pi) )
 		# Bias of the hidden layer
 		self.b = np.zeros(self.n_hidden)
 
